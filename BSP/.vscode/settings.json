@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "stlogo.h": "c",
+        "stdio.h": "c",
+        "stm32746g_discovery_lcd.h": "c"
+    }
+}
