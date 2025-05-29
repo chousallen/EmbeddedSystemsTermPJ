@@ -44,6 +44,8 @@
 
 DMA2D_HandleTypeDef hdma2d;
 
+I2C_HandleTypeDef hi2c3;
+
 LTDC_HandleTypeDef hltdc;
 
 UART_HandleTypeDef huart1;
@@ -61,14 +63,16 @@ static void MX_USART1_UART_Init(void);
 static void MX_FMC_Init(void);
 static void MX_LTDC_Init(void);
 static void MX_DMA2D_Init(void);
+static void MX_I2C3_Init(void);
 /* USER CODE BEGIN PFP */
 void Display_DemoDescription(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-uint8_t  lcd_status = LCD_OK;
+uint8_t status = 0, gesture = 0;
+uint8_t  lcd_status = LCD_OK, touch_screen_it = 0;
+TS_StateTypeDef touch_screen_state;
 /* USER CODE END 0 */
 
 /**
@@ -104,6 +108,7 @@ int main(void)
   MX_FMC_Init();
   MX_LTDC_Init();
   MX_DMA2D_Init();
+  MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
   BSP_LED_Init(LED1);
 
@@ -144,8 +149,9 @@ int main(void)
   snprintf(size_message, sizeof(size_message), "X: %lu, Y: %lu", lcd_x_size, lcd_y_size);
   BSP_LCD_DisplayStringAt(0, LINE(6), (uint8_t *)size_message, CENTER_MODE);
 
-  BSP_LED_On(LED1);
-  BSP_LED_Off(LED1);
+  status = BSP_TS_Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+  BSP_TS_ITConfig();
+  status = BSP_TS_ITGetStatus();
 
   /* USER CODE END 2 */
 
@@ -153,6 +159,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if(touch_screen_it)
+	  {
+		BSP_TS_ITClear();
+		BSP_TS_GetState(&touch_screen_state);
+		BSP_TS_Get_GestureId(&touch_screen_state);
+		if(touch_screen_state.gestureId != 0)
+			gesture = touch_screen_state.gestureId;
+		touch_screen_it = 0;
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -247,6 +262,54 @@ static void MX_DMA2D_Init(void)
   /* USER CODE BEGIN DMA2D_Init 2 */
 
   /* USER CODE END DMA2D_Init 2 */
+
+}
+
+/**
+  * @brief I2C3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C3_Init(void)
+{
+
+  /* USER CODE BEGIN I2C3_Init 0 */
+
+  /* USER CODE END I2C3_Init 0 */
+
+  /* USER CODE BEGIN I2C3_Init 1 */
+
+  /* USER CODE END I2C3_Init 1 */
+  hi2c3.Instance = I2C3;
+  hi2c3.Init.Timing = 0x20404768;
+  hi2c3.Init.OwnAddress1 = 0;
+  hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c3.Init.OwnAddress2 = 0;
+  hi2c3.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C3_Init 2 */
+
+  /* USER CODE END I2C3_Init 2 */
 
 }
 
@@ -686,7 +749,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : LCD_INT_Pin */
   GPIO_InitStruct.Pin = LCD_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(LCD_INT_GPIO_Port, &GPIO_InitStruct);
 
@@ -781,14 +844,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF13_DCMI;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LCD_SCL_Pin LCD_SDA_Pin */
-  GPIO_InitStruct.Pin = LCD_SCL_Pin|LCD_SDA_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF4_I2C3;
-  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
-
   /*Configure GPIO pins : ULPI_CLK_Pin ULPI_D0_Pin */
   GPIO_InitStruct.Pin = ULPI_CLK_Pin|ULPI_D0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -813,12 +868,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == LCD_INT_Pin)
+	{
+		touch_screen_it = 1;
+	}
+}
+
 void Display_DemoDescription(void)
 {
   uint8_t desc[50];
