@@ -31,6 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+
 #include "stm32746g_discovery.h"
 #include "stm32746g_discovery_lcd.h"
 

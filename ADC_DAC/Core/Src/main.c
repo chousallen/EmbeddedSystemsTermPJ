@@ -108,7 +108,9 @@ void startPlot(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define MSG_BUFF_LEN 32
 
+char msg[MSG_BUFF_LEN] = {0};
 /* USER CODE END 0 */
 
 /**
@@ -1154,6 +1156,7 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
     if(hadc->Instance == ADC3)
     {
         start_adc_process = TOP_HALF;
+        HAL_TIM_Base_Stop(&htim1);
     }
 }
 
@@ -1215,7 +1218,14 @@ void startADCprocess(void *argument)
   {
 	  if(start_adc_process)
 	  {
-        adc_process();
+		  start_adc_process = 0;
+		  for(int i=0; i<ADC_SINGLE_BUFF_LEN/2; i++)
+		  {
+			  memset(msg, 0, MSG_BUFF_LEN);
+			  sprintf(msg, "%d,%d,%d\n", adc_buff[0][i], adc_buff[1][i], adc_buff[2][i]);
+			  HAL_UART_Transmit(&huart1, msg, MSG_BUFF_LEN, 10);
+		  }
+//        adc_process();
       }
     osDelay(1);
   }
