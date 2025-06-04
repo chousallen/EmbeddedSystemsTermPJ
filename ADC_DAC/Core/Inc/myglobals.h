@@ -12,7 +12,7 @@
 
 #define GLOBAL_CLK_RATE (uint32_t) 216000000
 
-#define ADC_SINGLE_BUFF_LEN 240
+#define ADC_SINGLE_BUFF_LEN 24000
 #define ADC_NUM_INS 3
 
 #define PLOT_DATA_LEN 400
@@ -21,7 +21,7 @@
 #define TOP_HALF 1
 #define BOTTOM_HALF 2
 extern uint8_t start_adc_process;
-extern uint8_t start_plot;
+extern uint8_t start_plot, end_plot;
 
 /* variables */
 extern uint8_t trigger_level;

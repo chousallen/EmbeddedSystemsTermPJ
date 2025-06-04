@@ -72,14 +72,14 @@ osThreadId_t adc_processHandle;
 const osThreadAttr_t adc_process_attributes = {
   .name = "adc_process",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityRealtime,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for plot */
 osThreadId_t plotHandle;
 const osThreadAttr_t plot_attributes = {
   .name = "plot",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* USER CODE BEGIN PV */
 
@@ -113,7 +113,7 @@ void startPlot(void *argument);
 char msg[MSG_BUFF_LEN] = {0};
 
 int num_it = 0;
-uint8_t plot_ctrl = 0;
+uint32_t plot_ctrl = 0;
 /* USER CODE END 0 */
 
 /**
@@ -295,7 +295,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC1;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -347,7 +347,7 @@ static void MX_ADC2_Init(void)
   hadc2.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC2;
   hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc2.Init.NbrOfConversion = 1;
-  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.DMAContinuousRequests = ENABLE;
   hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
@@ -399,7 +399,7 @@ static void MX_ADC3_Init(void)
   hadc3.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC3;
   hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc3.Init.NbrOfConversion = 1;
-  hadc3.Init.DMAContinuousRequests = DISABLE;
+  hadc3.Init.DMAContinuousRequests = ENABLE;
   hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc3) != HAL_OK)
   {
@@ -723,15 +723,9 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA2_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-  /* DMA2_Stream2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream2_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
-  /* DMA2_Stream4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream4_IRQn);
+  /* DMA2_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 15, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }
 
@@ -1224,12 +1218,15 @@ void startADCprocess(void *argument)
   __HAL_TIM_ENABLE(&htim1);
 
   myhtim = &htim1;
+
+  set_sample_rate_index(14);
   /* Infinite loop */
   for(;;)
   {
-	  if(start_adc_process)
+	  if(start_adc_process > 0 && end_plot)
 	  {
 		  start_adc_process = 0;
+		  end_plot = 0;
 //		  for(int i=0; i<ADC_SINGLE_BUFF_LEN/2; i++)
 //		  {
 //			  memset(msg, 0, MSG_BUFF_LEN);
@@ -1259,11 +1256,6 @@ void startPlot(void *argument)
 	  if(start_plot)
 	  {
 		  start_plot = 0;
-		  if(plot_ctrl < 1)
-		  {
-			  plot_ctrl ++;
-			  break;
-		  }
 //		  uint16_t zero_index;
 		  for(int i = zero_index; i<PLOT_DATA_LEN; i++)
 		  {
@@ -1284,6 +1276,8 @@ void startPlot(void *argument)
 //			  sprintf(msg, "%d\n", plot_buff[i]);
 //			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
 //		  }
+		  osDelay(5000);
+		  end_plot = 1;
 	  }
     osDelay(1);
   }

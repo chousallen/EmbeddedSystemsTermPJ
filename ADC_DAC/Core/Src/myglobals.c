@@ -10,7 +10,7 @@
 
 /* signals */
 uint8_t start_adc_process = 0;
-uint8_t start_plot = 0;
+uint8_t start_plot = 0, end_plot = 1;
 
 /* variables */
 uint8_t trigger_level = 128;
