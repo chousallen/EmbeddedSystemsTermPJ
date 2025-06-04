@@ -1277,30 +1277,24 @@ void startPlot(void *argument)
 	  {
 		  start_plot = 0;
 		  BSP_LCD_Clear(LCD_COLOR_BLACK);
+		  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 		  uint8_t last = plot_buff[zero_index];
-		  for(int i = zero_index+1; i<PLOT_DATA_LEN; i++)
+		  for(int i = 1; i+zero_index < PLOT_DATA_LEN; i++)
 		  {
-			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
-			  last = plot_buff[i];
+			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i+zero_index]);
+			  last = plot_buff[i+zero_index];
 //            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
-		  last = plot_buff[0];
-		  for(int i = 0+1; i<=zero_index; i++)
+		  for(int i = PLOT_DATA_LEN - zero_index; i < PLOT_DATA_LEN; i++)
 		  {
-			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
-			  last = plot_buff[i];
+			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i+zero_index-PLOT_DATA_LEN]);
+			  last = plot_buff[i+zero_index-PLOT_DATA_LEN];
 //            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
 
-//		  for(int i = 0; i<PLOT_DATA_LEN; i++)
-//		  {
-//			  memset(msg, 0, MSG_BUFF_LEN);
-//			  sprintf(msg, "%d\n", plot_buff[i]);
-//			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
-//		  }
 		  end_plot = 1;
 	  }
-    osDelay(5000);
+    osDelay(100);
   }
   /* USER CODE END startPlot */
 }
