@@ -65,21 +65,21 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for adc_process */
 osThreadId_t adc_processHandle;
 const osThreadAttr_t adc_process_attributes = {
   .name = "adc_process",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for plot */
 osThreadId_t plotHandle;
 const osThreadAttr_t plot_attributes = {
   .name = "plot",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityRealtime,
 };
 /* USER CODE BEGIN PV */
 
@@ -735,7 +735,7 @@ static void MX_DMA_Init(void)
   HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
   /* DMA2_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
   /* DMA2_Stream4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 5, 0);
@@ -1237,7 +1237,7 @@ void startADCprocess(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  if(start_adc_process > 0 && end_plot)
+	  if(start_adc_process > 0 )
 	  {
 		  start_adc_process = 0;
 		  end_plot = 0;
@@ -1300,7 +1300,7 @@ void startPlot(void *argument)
 //		  }
 		  end_plot = 1;
 	  }
-    osDelay(100);
+    osDelay(5000);
   }
   /* USER CODE END startPlot */
 }

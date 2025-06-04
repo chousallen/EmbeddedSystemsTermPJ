@@ -108,10 +108,6 @@ void adc_process(void)
             for (; i < ADC_SINGLE_BUFF_LEN/2; i++)
             {
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
-                if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
-                {
-                    curr_dest = 0; // Reset the destination index
-                }
                 if (last < trigger_level && curr >= trigger_level)
                 {
                     trigger_index = curr_dest - 1; // Store the index of the trigger
@@ -121,14 +117,14 @@ void adc_process(void)
           			  zero_index = trigger_index - PLOT_DATA_LEN/2;
                     adc_process_state = STATE_COLLECT_AFTER; // Move to the next state
                     break;
+                }
+                if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
+                {
+                    curr_dest = 0; // Reset the destination index
                 }
                 last = curr;
 
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[1][i];
-                if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
-                {
-                    curr_dest = 0; // Reset the destination index
-                }
                 if (last < trigger_level && curr >= trigger_level)
                 {
                     trigger_index = curr_dest - 1; // Store the index of the trigger
@@ -138,14 +134,14 @@ void adc_process(void)
           			  zero_index = trigger_index - PLOT_DATA_LEN/2;
                     adc_process_state = STATE_COLLECT_AFTER; // Move to the next state
                     break;
+                }
+                if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
+                {
+                    curr_dest = 0; // Reset the destination index
                 }
                 last = curr;
 
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[2][i];
-                if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
-                {
-                    curr_dest = 0; // Reset the destination index
-                }
                 if (last < trigger_level && curr >= trigger_level)
                 {
                     trigger_index = curr_dest - 1; // Store the index of the trigger
@@ -155,6 +151,10 @@ void adc_process(void)
           			  zero_index = trigger_index - PLOT_DATA_LEN/2;
                     adc_process_state = STATE_COLLECT_AFTER; // Move to the next state
                     break;
+                }
+                if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
+                {
+                    curr_dest = 0; // Reset the destination index
                 }
                 last = curr;
             }
@@ -165,10 +165,6 @@ void adc_process(void)
             for (; i < ADC_SINGLE_BUFF_LEN/2; i++)
             {
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
-                if (curr_dest >= PLOT_DATA_LEN)
-                {
-                    curr_dest = 0;
-                }
                 if (last > trigger_level && curr <= trigger_level)
                 {
                     trigger_index = curr_dest - 1;
@@ -179,13 +175,13 @@ void adc_process(void)
                     adc_process_state = STATE_COLLECT_AFTER;
                     break;
                 }
-                last = curr;
-
-                curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[1][i];
                 if (curr_dest >= PLOT_DATA_LEN)
                 {
                     curr_dest = 0;
                 }
+                last = curr;
+
+                curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[1][i];
                 if (last > trigger_level && curr <= trigger_level)
                 {
                     trigger_index = curr_dest - 1;
@@ -195,14 +191,14 @@ void adc_process(void)
           			  zero_index = trigger_index - PLOT_DATA_LEN/2;
                     adc_process_state = STATE_COLLECT_AFTER;
                     break;
+                }
+                if (curr_dest >= PLOT_DATA_LEN)
+                {
+                    curr_dest = 0;
                 }
                 last = curr;
 
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[2][i];
-                if (curr_dest >= PLOT_DATA_LEN)
-                {
-                    curr_dest = 0;
-                }
                 if (last > trigger_level && curr <= trigger_level)
                 {
                     trigger_index = curr_dest - 1;
@@ -212,6 +208,10 @@ void adc_process(void)
           			  zero_index = trigger_index - PLOT_DATA_LEN/2;
                     adc_process_state = STATE_COLLECT_AFTER;
                     break;
+                }
+                if (curr_dest >= PLOT_DATA_LEN)
+                {
+                    curr_dest = 0;
                 }
                 last = curr;
             }
