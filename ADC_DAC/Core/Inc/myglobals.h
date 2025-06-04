@@ -12,7 +12,7 @@
 
 #define GLOBAL_CLK_RATE (uint32_t) 216000000
 
-#define ADC_SINGLE_BUFF_LEN 24000
+#define ADC_SINGLE_BUFF_LEN 952
 #define ADC_NUM_INS 3
 
 #define PLOT_DATA_LEN 400
