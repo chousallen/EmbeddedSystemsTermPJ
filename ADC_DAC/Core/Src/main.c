@@ -112,7 +112,6 @@ void startPlot(void *argument);
 
 char msg[MSG_BUFF_LEN] = {0};
 
-uint16_t zero_index = 0;
 int num_it = 0;
 /* USER CODE END 0 */
 
@@ -1255,10 +1254,6 @@ void startPlot(void *argument)
 	  {
 		  start_plot = 0;
 //		  uint16_t zero_index;
-		  if(trigger_index < PLOT_DATA_LEN/2)
-			  zero_index = trigger_index + PLOT_DATA_LEN/2;
-		  else
-			  zero_index = trigger_index - PLOT_DATA_LEN/2;
 		  for(int i = zero_index; i<PLOT_DATA_LEN; i++)
 		  {
 			  memset(msg, 0, MSG_BUFF_LEN);

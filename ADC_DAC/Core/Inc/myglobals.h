@@ -30,5 +30,6 @@ extern uint8_t trigger_level;
 extern uint8_t trigger_type;
 extern uint8_t *plot_buff; // Pointer to the plot buffer to be used in the plot thread
 extern uint16_t trigger_index; // Index of the center in the plot buffer
+extern uint16_t zero_index;
 
 #endif /* INC_MYGLOBALS_H_ */

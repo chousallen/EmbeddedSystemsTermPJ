@@ -12,11 +12,12 @@
 #include <stdint.h>
 
 typedef enum {
+    STATE_COLLECT_BEFORE,
     STATE_FIND_TRIGGER, 
-    STATE_COLLECT_DATA,
+    STATE_COLLECT_AFTER,
 } adc_state_t;
 
-adc_state_t adc_process_state = STATE_FIND_TRIGGER;
+adc_state_t adc_process_state = STATE_COLLECT_BEFORE;
 
 uint8_t adc_buff[ADC_NUM_INS][ADC_SINGLE_BUFF_LEN];
 uint32_t sample_rate_map[NUM_SAMPLE_RATES] =
@@ -73,15 +74,38 @@ void adc_process(void)
     }
 
     uint8_t last = adc_buff_ptr[0][0], curr;
+    uint16_t i = 0;
 
     switch (adc_process_state)
     {
+    case STATE_COLLECT_BEFORE:
+        // Process the ADC data before finding the trigger
+        for (; i < PLOT_DATA_LEN/2/3; i++)
+        {
+            curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
+            if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
+            {
+                curr_dest = 0; // Reset the destination index
+            }
+            my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[1][i];
+            if (curr_dest >= PLOT_DATA_LEN)
+            {
+                curr_dest = 0;
+            }
+            my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[2][i];
+            if (curr_dest >= PLOT_DATA_LEN)
+            {
+                curr_dest = 0;
+            }
+        }
+        adc_process_state = STATE_FIND_TRIGGER; // Move to the next state
+
     case STATE_FIND_TRIGGER:
         // Process the ADC data to find the trigger
         if(trigger_type == RISING_EDGE)
         {
             // Look for a rising edge
-            for (uint16_t i = 0; i < ADC_SINGLE_BUFF_LEN/2; i++)
+            for (; i < ADC_SINGLE_BUFF_LEN/2; i++)
             {
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
                 if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
@@ -91,7 +115,11 @@ void adc_process(void)
                 if (last < trigger_level && curr >= trigger_level)
                 {
                     trigger_index = curr_dest - 1; // Store the index of the trigger
-                    adc_process_state = STATE_COLLECT_DATA; // Move to the next state
+          		  if(trigger_index < PLOT_DATA_LEN/2)
+          			  zero_index = trigger_index + PLOT_DATA_LEN/2;
+          		  else
+          			  zero_index = trigger_index - PLOT_DATA_LEN/2;
+                    adc_process_state = STATE_COLLECT_AFTER; // Move to the next state
                     break;
                 }
                 last = curr;
@@ -104,7 +132,11 @@ void adc_process(void)
                 if (last < trigger_level && curr >= trigger_level)
                 {
                     trigger_index = curr_dest - 1; // Store the index of the trigger
-                    adc_process_state = STATE_COLLECT_DATA; // Move to the next state
+          		  if(trigger_index < PLOT_DATA_LEN/2)
+          			  zero_index = trigger_index + PLOT_DATA_LEN/2;
+          		  else
+          			  zero_index = trigger_index - PLOT_DATA_LEN/2;
+                    adc_process_state = STATE_COLLECT_AFTER; // Move to the next state
                     break;
                 }
                 last = curr;
@@ -117,7 +149,11 @@ void adc_process(void)
                 if (last < trigger_level && curr >= trigger_level)
                 {
                     trigger_index = curr_dest - 1; // Store the index of the trigger
-                    adc_process_state = STATE_COLLECT_DATA; // Move to the next state
+          		  if(trigger_index < PLOT_DATA_LEN/2)
+          			  zero_index = trigger_index + PLOT_DATA_LEN/2;
+          		  else
+          			  zero_index = trigger_index - PLOT_DATA_LEN/2;
+                    adc_process_state = STATE_COLLECT_AFTER; // Move to the next state
                     break;
                 }
                 last = curr;
@@ -126,7 +162,7 @@ void adc_process(void)
         else if(trigger_type == FALLING_EDGE)
         {
             // Look for a falling edge
-            for (uint16_t i = 0; i < ADC_SINGLE_BUFF_LEN/2; i++)
+            for (; i < ADC_SINGLE_BUFF_LEN/2; i++)
             {
                 curr = my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
                 if (curr_dest >= PLOT_DATA_LEN)
@@ -136,7 +172,11 @@ void adc_process(void)
                 if (last > trigger_level && curr <= trigger_level)
                 {
                     trigger_index = curr_dest - 1;
-                    adc_process_state = STATE_COLLECT_DATA;
+				  if(trigger_index < PLOT_DATA_LEN/2)
+					  zero_index = trigger_index + PLOT_DATA_LEN/2;
+				  else
+					  zero_index = trigger_index - PLOT_DATA_LEN/2;
+                    adc_process_state = STATE_COLLECT_AFTER;
                     break;
                 }
                 last = curr;
@@ -149,7 +189,11 @@ void adc_process(void)
                 if (last > trigger_level && curr <= trigger_level)
                 {
                     trigger_index = curr_dest - 1;
-                    adc_process_state = STATE_COLLECT_DATA;
+          		  if(trigger_index < PLOT_DATA_LEN/2)
+          			  zero_index = trigger_index + PLOT_DATA_LEN/2;
+          		  else
+          			  zero_index = trigger_index - PLOT_DATA_LEN/2;
+                    adc_process_state = STATE_COLLECT_AFTER;
                     break;
                 }
                 last = curr;
@@ -162,7 +206,11 @@ void adc_process(void)
                 if (last > trigger_level && curr <= trigger_level)
                 {
                     trigger_index = curr_dest - 1;
-                    adc_process_state = STATE_COLLECT_DATA;
+          		  if(trigger_index < PLOT_DATA_LEN/2)
+          			  zero_index = trigger_index + PLOT_DATA_LEN/2;
+          		  else
+          			  zero_index = trigger_index - PLOT_DATA_LEN/2;
+                    adc_process_state = STATE_COLLECT_AFTER;
                     break;
                 }
                 last = curr;
@@ -171,14 +219,23 @@ void adc_process(void)
         if(adc_process_state == STATE_FIND_TRIGGER)
             break;
 
-    case STATE_COLLECT_DATA:
+    case STATE_COLLECT_AFTER:
         // Process the ADC data to collect it
-        for(uint16_t i = 0; i < PLOT_DATA_LEN/2; i++)
+        for(; i < ADC_SINGLE_BUFF_LEN/2; i++)
         {
             my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
             if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer
             {
                 curr_dest = 0; // Reset the destination index
+            }
+            if(curr_dest == zero_index)
+            {
+                plot_buff = my_plot_buff[use_plot_buff]; // Use the current plot buffer
+                start_plot = 1; // Signal to start plotting
+                use_plot_buff = 1-use_plot_buff; // Toggle the buffer to use
+                adc_process_state = STATE_COLLECT_BEFORE; // Reset the state to find the next trigger
+                curr_dest = 0; // Reset the destination index for the next plot
+                break;
             }
 
             my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[1][i];
@@ -186,19 +243,31 @@ void adc_process(void)
             {
                 curr_dest = 0;
             }
+            if(curr_dest == zero_index)
+            {
+                plot_buff = my_plot_buff[use_plot_buff]; // Use the current plot buffer
+                start_plot = 1; // Signal to start plotting
+                use_plot_buff = 1-use_plot_buff; // Toggle the buffer to use
+                adc_process_state = STATE_COLLECT_BEFORE; // Reset the state to find the next trigger
+                curr_dest = 0; // Reset the destination index for the next plot
+                break;
+            }
 
             my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[2][i];
             if (curr_dest >= PLOT_DATA_LEN)
             {
                 curr_dest = 0;
             }
+            if(curr_dest == zero_index)
+            {
+                plot_buff = my_plot_buff[use_plot_buff]; // Use the current plot buffer
+                start_plot = 1; // Signal to start plotting
+                use_plot_buff = 1-use_plot_buff; // Toggle the buffer to use
+                adc_process_state = STATE_COLLECT_BEFORE; // Reset the state to find the next trigger
+                curr_dest = 0; // Reset the destination index for the next plot
+                break;
+            }
         }
-        plot_buff = my_plot_buff[use_plot_buff]; // Use the current plot buffer
-        start_plot = 1; // Signal to start plotting
-        use_plot_buff = 1-use_plot_buff; // Toggle the buffer to use
-        adc_process_state = STATE_FIND_TRIGGER; // Reset the state to find the next trigger
-        curr_dest = 0; // Reset the destination index for the next plot
-        break;
     
     default:
         break;
