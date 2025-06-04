@@ -438,10 +438,10 @@ static void MX_DMA2D_Init(void)
   /* USER CODE END DMA2D_Init 1 */
   hdma2d.Instance = DMA2D;
   hdma2d.Init.Mode = DMA2D_M2M;
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = 0;
   hdma2d.LayerCfg[1].InputOffset = 0;
-  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB8888;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0;
   if (HAL_DMA2D_Init(&hdma2d) != HAL_OK)
@@ -1219,7 +1219,7 @@ void startADCprocess(void *argument)
 
   myhtim = &htim1;
 
-  set_sample_rate_index(14);
+  set_sample_rate_index(8);
   /* Infinite loop */
   for(;;)
   {
@@ -1250,6 +1250,13 @@ void startADCprocess(void *argument)
 void startPlot(void *argument)
 {
   /* USER CODE BEGIN startPlot */
+  BSP_LCD_Init();
+  BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER, LCD_FRAME_BUFFER);
+  BSP_LCD_SelectLayer(LTDC_ACTIVE_LAYER);
+  BSP_LCD_Clear(LCD_COLOR_BLACK);
+  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+  BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
+  BSP_LCD_FillRect(50, 50, 50, 50);
   /* Infinite loop */
   for(;;)
   {
@@ -1259,15 +1266,11 @@ void startPlot(void *argument)
 //		  uint16_t zero_index;
 		  for(int i = zero_index; i<PLOT_DATA_LEN; i++)
 		  {
-			  memset(msg, 0, MSG_BUFF_LEN);
-			  sprintf(msg, "%d\n", plot_buff[i]);
-			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
+//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
 		  for(int i = 0; i<zero_index; i++)
 		  {
-			  memset(msg, 0, MSG_BUFF_LEN);
-			  sprintf(msg, "%d\n", plot_buff[i]);
-			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
+//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
 
 //		  for(int i = 0; i<PLOT_DATA_LEN; i++)
@@ -1276,10 +1279,9 @@ void startPlot(void *argument)
 //			  sprintf(msg, "%d\n", plot_buff[i]);
 //			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
 //		  }
-		  osDelay(5000);
 		  end_plot = 1;
 	  }
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END startPlot */
 }

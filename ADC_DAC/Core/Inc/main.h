@@ -396,6 +396,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
+#define LCD_FRAME_BUFFER          SDRAM_DEVICE_ADDR
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
