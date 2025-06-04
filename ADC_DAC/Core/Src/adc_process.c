@@ -71,7 +71,6 @@ void adc_process(void)
         adc_buff_ptr[1] = adc_buff[1] + ADC_SINGLE_BUFF_LEN / 2;
         adc_buff_ptr[2] = adc_buff[2] + ADC_SINGLE_BUFF_LEN / 2;
     }
-    start_adc_process = 0; // Reset the signal
 
     uint8_t last = adc_buff_ptr[0][0], curr;
 
@@ -174,7 +173,7 @@ void adc_process(void)
 
     case STATE_COLLECT_DATA:
         // Process the ADC data to collect it
-        for(uint16_t i = 0; i < ADC_SINGLE_BUFF_LEN/2; i++)
+        for(uint16_t i = 0; i < PLOT_DATA_LEN/2; i++)
         {
             my_plot_buff[use_plot_buff][curr_dest++] = adc_buff_ptr[0][i];
             if (curr_dest >= PLOT_DATA_LEN) // Check if we reached the end of the plot buffer

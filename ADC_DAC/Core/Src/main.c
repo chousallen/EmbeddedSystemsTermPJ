@@ -108,9 +108,12 @@ void startPlot(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define MSG_BUFF_LEN 32
+#define MSG_BUFF_LEN 8
 
 char msg[MSG_BUFF_LEN] = {0};
+
+uint16_t zero_index = 0;
+int num_it = 0;
 /* USER CODE END 0 */
 
 /**
@@ -1155,8 +1158,9 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if(hadc->Instance == ADC3)
     {
+	  HAL_TIM_Base_Stop(&htim1);
+    	num_it++;
         start_adc_process = TOP_HALF;
-        HAL_TIM_Base_Stop(&htim1);
     }
 }
 
@@ -1164,6 +1168,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	if(hadc->Instance == ADC3)
 	{
+		num_it++;
 		start_adc_process = BOTTOM_HALF;
 	}
 }
@@ -1213,21 +1218,22 @@ void startADCprocess(void *argument)
   __HAL_TIM_ENABLE(&htim1);
 
   myhtim = &htim1;
+  set_sample_rate_index(14);
   /* Infinite loop */
   for(;;)
   {
 	  if(start_adc_process)
 	  {
 		  start_adc_process = 0;
-		  for(int i=0; i<ADC_SINGLE_BUFF_LEN/2; i++)
-		  {
-			  memset(msg, 0, MSG_BUFF_LEN);
-			  sprintf(msg, "%d,%d,%d\n", adc_buff[0][i], adc_buff[1][i], adc_buff[2][i]);
-			  HAL_UART_Transmit(&huart1, msg, MSG_BUFF_LEN, 10);
-		  }
-//        adc_process();
+//		  for(int i=0; i<ADC_SINGLE_BUFF_LEN/2; i++)
+//		  {
+//			  memset(msg, 0, MSG_BUFF_LEN);
+//			  sprintf(msg, "%d,%d,%d\n", adc_buff[0][i], adc_buff[1][i], adc_buff[2][i]);
+//			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
+//		  }
+        adc_process();
       }
-    osDelay(1);
+    osDelay(10);
   }
   /* USER CODE END startADCprocess */
 }
@@ -1245,6 +1251,34 @@ void startPlot(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  if(start_plot)
+	  {
+		  start_plot = 0;
+//		  uint16_t zero_index;
+		  if(trigger_index < PLOT_DATA_LEN/2)
+			  zero_index = trigger_index + PLOT_DATA_LEN/2;
+		  else
+			  zero_index = trigger_index - PLOT_DATA_LEN/2;
+		  for(int i = zero_index; i<PLOT_DATA_LEN; i++)
+		  {
+			  memset(msg, 0, MSG_BUFF_LEN);
+			  sprintf(msg, "%d\n", plot_buff[i]);
+			  HAL_UART_Transmit(&huart1, msg, MSG_BUFF_LEN, 10);
+		  }
+		  for(int i = 0; i<zero_index; i++)
+		  {
+			  memset(msg, 0, MSG_BUFF_LEN);
+			  sprintf(msg, "%d\n", plot_buff[i]);
+			  HAL_UART_Transmit(&huart1, msg, MSG_BUFF_LEN, 10);
+		  }
+
+//		  for(int i = 0; i<PLOT_DATA_LEN; i++)
+//		  {
+//			  memset(msg, 0, MSG_BUFF_LEN);
+//			  sprintf(msg, "%d\n", plot_buff[i]);
+//			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
+//		  }
+	  }
     osDelay(1);
   }
   /* USER CODE END startPlot */
