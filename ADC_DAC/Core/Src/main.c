@@ -617,7 +617,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 9;
+  htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = TIM1_Period-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -731,15 +731,15 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA2_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 15, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
   /* DMA2_Stream1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
-  /* DMA2_Stream2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream2_IRQn, 14, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+  /* DMA2_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
+  /* DMA2_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream4_IRQn);
 
 }
 
@@ -1270,20 +1270,25 @@ void startPlot(void *argument)
   BSP_LCD_Clear(LCD_COLOR_BLACK);
   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
   BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
-  BSP_LCD_FillRect(50, 50, 50, 50);
   /* Infinite loop */
   for(;;)
   {
 	  if(start_plot)
 	  {
 		  start_plot = 0;
-//		  uint16_t zero_index;
-		  for(int i = zero_index; i<PLOT_DATA_LEN; i++)
+		  BSP_LCD_Clear(LCD_COLOR_BLACK);
+		  uint8_t last = plot_buff[zero_index];
+		  for(int i = zero_index+1; i<PLOT_DATA_LEN; i++)
 		  {
+			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
+			  last = plot_buff[i];
 //            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
-		  for(int i = 0; i<zero_index; i++)
+		  last = plot_buff[0];
+		  for(int i = 0+1; i<=zero_index; i++)
 		  {
+			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
+			  last = plot_buff[i];
 //            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
 

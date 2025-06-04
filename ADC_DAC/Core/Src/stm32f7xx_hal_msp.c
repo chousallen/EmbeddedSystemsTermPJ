@@ -114,7 +114,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
-    hdma_adc1.Instance = DMA2_Stream0;
+    hdma_adc1.Instance = DMA2_Stream4;
     hdma_adc1.Init.Channel = DMA_CHANNEL_0;
     hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -154,7 +154,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
     /* ADC2 DMA Init */
     /* ADC2 Init */
-    hdma_adc2.Instance = DMA2_Stream2;
+    hdma_adc2.Instance = DMA2_Stream3;
     hdma_adc2.Init.Channel = DMA_CHANNEL_1;
     hdma_adc2.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc2.Init.PeriphInc = DMA_PINC_DISABLE;
