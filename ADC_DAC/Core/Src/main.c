@@ -113,6 +113,7 @@ void startPlot(void *argument);
 char msg[MSG_BUFF_LEN] = {0};
 
 int num_it = 0;
+uint8_t plot_ctrl = 0;
 /* USER CODE END 0 */
 
 /**
@@ -673,6 +674,7 @@ static void MX_TIM1_Init(void)
   /* USER CODE BEGIN TIM1_Init 2 */
 
   /* USER CODE END TIM1_Init 2 */
+  HAL_TIM_MspPostInit(&htim1);
 
 }
 
@@ -721,9 +723,15 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA2_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA2_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream2_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+  /* DMA2_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream4_IRQn);
 
 }
 
@@ -1157,7 +1165,6 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if(hadc->Instance == ADC3)
     {
-	  HAL_TIM_Base_Stop(&htim1);
     	num_it++;
         start_adc_process = TOP_HALF;
     }
@@ -1217,7 +1224,6 @@ void startADCprocess(void *argument)
   __HAL_TIM_ENABLE(&htim1);
 
   myhtim = &htim1;
-  set_sample_rate_index(14);
   /* Infinite loop */
   for(;;)
   {
@@ -1253,18 +1259,23 @@ void startPlot(void *argument)
 	  if(start_plot)
 	  {
 		  start_plot = 0;
+		  if(plot_ctrl < 1)
+		  {
+			  plot_ctrl ++;
+			  break;
+		  }
 //		  uint16_t zero_index;
 		  for(int i = zero_index; i<PLOT_DATA_LEN; i++)
 		  {
 			  memset(msg, 0, MSG_BUFF_LEN);
 			  sprintf(msg, "%d\n", plot_buff[i]);
-			  HAL_UART_Transmit(&huart1, msg, MSG_BUFF_LEN, 10);
+			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
 		  }
 		  for(int i = 0; i<zero_index; i++)
 		  {
 			  memset(msg, 0, MSG_BUFF_LEN);
 			  sprintf(msg, "%d\n", plot_buff[i]);
-			  HAL_UART_Transmit(&huart1, msg, MSG_BUFF_LEN, 10);
+			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
 		  }
 
 //		  for(int i = 0; i<PLOT_DATA_LEN; i++)
