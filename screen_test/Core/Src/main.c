@@ -124,6 +124,23 @@ int main(void)
   uint32_t lcd_x_size = BSP_LCD_GetXSize();
   uint32_t lcd_y_size = BSP_LCD_GetYSize();
 
+
+  /* Set LCD Foreground Layer  */
+  BSP_LCD_SelectLayer(LTDC_ACTIVE_LAYER);
+
+//  BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+
+  /* Clear the LCD */
+  BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
+  BSP_LCD_Clear(LCD_COLOR_BLACK);
+
+  /* Set the LCD Text Color */
+  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+  for(int i=0; i<256; i++)
+  {
+	  BSP_LCD_FillRect(i, i, 1, 1);
+  }
+
   Display_DemoDescription();
 
   /* Set the LCD background and text colors */
