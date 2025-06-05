@@ -37,8 +37,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define NUM_TAPS 29
-#define BLOCK_SIZE 32
+#define NUM_TAPS 400
+#define BLOCK_SIZE 400
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
