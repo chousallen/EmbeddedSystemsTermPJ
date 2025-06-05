@@ -13,7 +13,7 @@ fir_type_t fir_current_type = FIR_LOW; // indicates type of filter
 float fir_coeffs[fir_N]; // fir coefficients
 
 float fir_fc1 = 0.2; // lower cutoff frequency (only used in bandpass/bandstop)
-float fir_fc2 = 0.4; // upper cutoff frequency (also fc in lpf, hpf)
+float fir_fc2 = 0.01; // upper cutoff frequency (also fc in lpf, hpf)
 
 void design_fir(void)
 {

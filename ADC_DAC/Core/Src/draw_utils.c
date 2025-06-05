@@ -16,7 +16,8 @@ waveform_t current_waveform = SIN;
 float waveform_mag = 1;
 float waveform_freq = 1000;
 float waveform_duty = 0.3;
-float osc_Vpp, osc_T, osc_V, osc_trigger, osc_freq;
+float osc_Vpp, osc_T, osc_V, /*osc_trigger,*/ osc_freq;
+float osc_trigger = 1.5;
 int anomaly_flag = 0;
 int test_flag = 0;
 uint8_t databuffer[400];
@@ -235,30 +236,39 @@ void touch_screen_response(){
 }
 
 void float_to_string(float val, char *str, int decimal_places) {
+    char int_str[12];   // For integer part
+    char frac_str[12];  // For fractional part
+
     if (val < 0) {
         *str++ = '-';
         val = -val;
     }
 
     int int_part = (int)val;
-    int frac_part = (int)((val - int_part) * pow(10, decimal_places));
+    float frac = val - (float)int_part;
+    int frac_part = (int)(frac * pow(10, decimal_places) + 0.5f);  // round properly
 
-    // Convert integer part
-    itoa(int_part, str, 10);
-    while (*str) str++;  // Move pointer to end
+    itoa(int_part, int_str, 10);
+    itoa(frac_part, frac_str, 10);
 
+    // Pad fractional part with leading zeros if needed
+    int frac_len = strlen(frac_str);
+    int padding = decimal_places - frac_len;
+
+    strcpy(str, int_str);
+    str += strlen(int_str);
     *str++ = '.';
 
-    // Convert fractional part with leading zero if needed
-    if (decimal_places == 2 && frac_part < 10)
+    for (int i = 0; i < padding; i++) {
         *str++ = '0';
+    }
 
-    itoa(frac_part, str, 10);
+    strcpy(str, frac_str);  // copy remaining frac digits
 }
 
 void buffer_maker(float val, const char *prefix, char *out_buffer) {
     char numbuff[20];
-    float_to_string(val, numbuff, 2);
+    float_to_string(val, numbuff, 8);
 
     strcpy(out_buffer, prefix);      // Copy prefix like "Vpp: "
     strcat(out_buffer, numbuff);     // Append converted float
