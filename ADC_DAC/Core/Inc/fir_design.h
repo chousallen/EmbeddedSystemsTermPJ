@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define fir_N 29 // Number of filter taps
+#define fir_N 400 // Number of filter taps
 #define fir_M (fir_N - 1)
 #define PI 3.14159265358979323846f
 
