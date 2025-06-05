@@ -1723,7 +1723,6 @@ void startPlot(void *argument)
 			  last = plot_buff[i+zero_index];
 			  if(plot_buff[i+zero_index] > max) max = plot_buff[i+zero_index];
 			  if(plot_buff[i+zero_index] < min) min = plot_buff[i+zero_index];
-//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
 		  for(int i = PLOT_DATA_LEN - zero_index; i < PLOT_DATA_LEN; i++)
 		  {
@@ -1731,7 +1730,6 @@ void startPlot(void *argument)
 			  last = plot_buff[i+zero_index-PLOT_DATA_LEN];
 			  if(plot_buff[i+zero_index-PLOT_DATA_LEN] > max) max = plot_buff[i+zero_index-PLOT_DATA_LEN];
 			  if(plot_buff[i+zero_index-PLOT_DATA_LEN] < min) min = plot_buff[i+zero_index-PLOT_DATA_LEN];
-//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 		  }
 		  osc_T = 400.0 / get_sample_rate();
 		  float zcbuff[40]; int crossing = 0;
@@ -1763,30 +1761,25 @@ void startPlot(void *argument)
 	  if((current_mode == PUR) && apply_filter){
 		  end_plot = 0;
 		  float32_t *outputF32;
-		  for (int i = 0; i < 400; i++) {
-		      inputF32[i] = (float32_t)plot_buff[i];
+		  for (int i = 0; i+zero_index < PLOT_DATA_LEN; i++) {
+		      inputF32[i] = (float32_t)plot_buff[i+zero_index];
 		  }
+          for(int i=PLOT_DATA_LEN-zero_index; i < PLOT_DATA_LEN; i++)
+          {
+        	  inputF32[i] = (float32_t)plot_buff[i+zero_index-PLOT_DATA_LEN];
+          }
 //		  inputF32 = &plot_buff[0];
 		  outputF32 = &fir_output[0];
 		  for(int i = 0; i < numBlocks; i++){
 			  arm_fir_f32(&S, inputF32 + (i * BLOCK_SIZE), outputF32 + (i * BLOCK_SIZE), BLOCK_SIZE);
 		  }
-		  uint8_t last = fir_output[zero_index];
+		  uint8_t last = fir_output[0];
 		  BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
 //		  float max = 0, min = 3.3;
-		  for(int i = 1; i+zero_index < PLOT_DATA_LEN; i++)
+		  for(int i = 1; i< PLOT_DATA_LEN; i++)
 		  {
-			  BSP_LCD_DrawLine(i-1, last, i, fir_output[i+zero_index]);
-			  last = fir_output[i+zero_index];
-//			  if(fir_output[i+zero_index] > max) max = fir_output[i+zero_index];
-//			  if(fir_output[i+zero_index] < min) min = fir_output[i+zero_index];
-		  }
-		  for(int i = PLOT_DATA_LEN - zero_index; i < PLOT_DATA_LEN; i++)
-		  {
-			  BSP_LCD_DrawLine(i-1, last, i, fir_output[i+zero_index-PLOT_DATA_LEN]);
-			  last = fir_output[i+zero_index-PLOT_DATA_LEN];
-//			  if(plot_buff[i+zero_index-PLOT_DATA_LEN] > max) max = plot_buff[i+zero_index-PLOT_DATA_LEN];
-//			  if(plot_buff[i+zero_index-PLOT_DATA_LEN] < min) min = plot_buff[i+zero_index-PLOT_DATA_LEN];
+			  BSP_LCD_DrawLine(i-1, last, i, fir_output[i]);
+			  last = fir_output[i];
 		  }
 //		  osc_T = 400.0 / get_sample_rate();
 //		  float zcbuff[40]; int crossing = 0;
