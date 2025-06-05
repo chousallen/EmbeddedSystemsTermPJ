@@ -69,20 +69,21 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for adc_process */
 osThreadId_t adc_processHandle;
 const osThreadAttr_t adc_process_attributes = {
   .name = "adc_process",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for plot */
 osThreadId_t plotHandle;
 const osThreadAttr_t plot_attributes = {
   .name = "plot",
   .stack_size = 128 * 4,
+<<<<<<< HEAD
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for TSResponse */
@@ -91,6 +92,9 @@ const osThreadAttr_t TSResponse_attributes = {
   .name = "TSResponse",
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityLow,
+=======
+  .priority = (osPriority_t) osPriorityRealtime,
+>>>>>>> d81a9ede52e2e24bd71aa4f06467ffbc93b0d871
 };
 /* USER CODE BEGIN PV */
 
@@ -1288,11 +1292,9 @@ void startADCprocess(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  end_plot = 1;
 	  if(start_adc_process > 0 && end_plot)
 	  {
 		  start_adc_process = 0;
-//		  end_plot = 0;
 //		  for(int i=0; i<ADC_SINGLE_BUFF_LEN/2; i++)
 //		  {
 //			  memset(msg, 0, MSG_BUFF_LEN);
@@ -1300,6 +1302,7 @@ void startADCprocess(void *argument)
 //			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
 //		  }
         adc_process();
+		  end_plot = 1;
       }
     osDelay(10);
   }
@@ -1325,6 +1328,7 @@ void startPlot(void *argument)
   /* Infinite loop */
   for(;;)
   {
+<<<<<<< HEAD
 //	  if(current_mode == PUR){
 //		  draw_waveform();
 //	  }
@@ -1355,6 +1359,29 @@ void startPlot(void *argument)
 ////		  }
 //		  end_plot = 1;
 //	  }
+=======
+	  if(start_plot)
+	  {
+		  start_plot = 0;
+		  BSP_LCD_Clear(LCD_COLOR_BLACK);
+		  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+		  uint8_t last = plot_buff[zero_index];
+		  for(int i = 1; i+zero_index < PLOT_DATA_LEN; i++)
+		  {
+			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i+zero_index]);
+			  last = plot_buff[i+zero_index];
+//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
+		  }
+		  for(int i = PLOT_DATA_LEN - zero_index; i < PLOT_DATA_LEN; i++)
+		  {
+			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i+zero_index-PLOT_DATA_LEN]);
+			  last = plot_buff[i+zero_index-PLOT_DATA_LEN];
+//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
+		  }
+
+		  end_plot = 1;
+	  }
+>>>>>>> d81a9ede52e2e24bd71aa4f06467ffbc93b0d871
     osDelay(100);
   }
   /* USER CODE END startPlot */
