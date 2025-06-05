@@ -105,7 +105,7 @@ const osThreadAttr_t FirDesign_attributes = {
 
 arm_fir_instance_f32 S;
 arm_status fir_status;
-float32_t fir_output[400];
+float32_t fir_output[400], inputF32[400];
 static float32_t firStateF32[BLOCK_SIZE + NUM_TAPS - 1];
 uint32_t numBlocks = 400/BLOCK_SIZE;
 
@@ -202,10 +202,6 @@ int main(void)
     Error_Handler();
   }
   BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER, LCD_FRAME_BUFFER);
-
-  /* Get the LCD X and Y sizes */
-  uint32_t lcd_x_size = BSP_LCD_GetXSize();
-  uint32_t lcd_y_size = BSP_LCD_GetYSize();
 
   BSP_LCD_SelectLayer(LTDC_ACTIVE_LAYER);
   BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
@@ -1767,7 +1763,6 @@ void startPlot(void *argument)
 	  if((current_mode == PUR) && apply_filter){
 		  end_plot = 0;
 		  float32_t *outputF32;
-		  float32_t inputF32[400];
 		  for (int i = 0; i < 400; i++) {
 		      inputF32[i] = (float32_t)plot_buff[i];
 		  }

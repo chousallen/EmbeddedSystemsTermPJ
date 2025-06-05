@@ -29,6 +29,40 @@ uint8_t status = 0, gesture = 0;
 uint8_t  lcd_status = LCD_OK, touch_screen_it = 0;
 TS_StateTypeDef touch_screen_state;
 
+
+// Custom implementation of itoa
+void itoa(int value, char *str, int base) {
+    char *rc = str;
+    char *ptr;
+    char *low;
+
+    // Handle negative numbers for base 10
+    if (value < 0 && base == 10) {
+        *str++ = '-';
+        value = -value;
+    }
+
+    // Set up pointer to end of string
+    ptr = str;
+
+    // Convert number to string
+    do {
+        *ptr++ = "0123456789ABCDEF"[value % base];
+        value /= base;
+    } while (value);
+
+    // Null-terminate the string
+    *ptr-- = '\0';
+
+    // Reverse the string
+    low = str;
+    while (low < ptr) {
+        char tmp = *low;
+        *low++ = *ptr;
+        *ptr-- = tmp;
+    }
+}
+
 void Display_Osc(){
 	BSP_LCD_Clear(LCD_COLOR_BLACK);
 	BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
