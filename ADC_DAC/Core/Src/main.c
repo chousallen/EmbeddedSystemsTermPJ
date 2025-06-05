@@ -22,7 +22,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include "fir_design.h"
+#include "math.h"
+#include "string.h"
+#include "draw_utils.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,7 +83,14 @@ osThreadId_t plotHandle;
 const osThreadAttr_t plot_attributes = {
   .name = "plot",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for TSResponse */
+osThreadId_t TSResponseHandle;
+const osThreadAttr_t TSResponse_attributes = {
+  .name = "TSResponse",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* USER CODE BEGIN PV */
 
@@ -101,6 +112,7 @@ static void MX_TIM1_Init(void);
 void StartDefaultTask(void *argument);
 void startADCprocess(void *argument);
 void startPlot(void *argument);
+void StartTSResponse(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -164,6 +176,34 @@ int main(void)
   MX_ADC3_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  BSP_LED_Init(LED1);
+
+  /* Initialize the LCD */
+  lcd_status = BSP_LCD_Init();
+  if (lcd_status != LCD_OK)
+  {
+    Error_Handler();
+  }
+  BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER, LCD_FRAME_BUFFER);
+
+  /* Get the LCD X and Y sizes */
+  uint32_t lcd_x_size = BSP_LCD_GetXSize();
+  uint32_t lcd_y_size = BSP_LCD_GetYSize();
+
+  BSP_LCD_SelectLayer(LTDC_ACTIVE_LAYER);
+  BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+  BSP_LCD_SetFont(&Font16);
+  BSP_LCD_DisplayOn();
+  BSP_LCD_Clear(LCD_COLOR_WHITE);
+  BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+  BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+
+  BSP_LCD_DrawRect(50, 50, 100, 50);
+  status = BSP_TS_Init(SCREEN_WIDTH, SCREEN_HEIGHT);
+  BSP_TS_ITConfig();
+  status = BSP_TS_ITGetStatus();
+
+  Display_Osc();
 
   /* USER CODE END 2 */
 
@@ -195,6 +235,9 @@ int main(void)
 
   /* creation of plot */
   plotHandle = osThreadNew(startPlot, NULL, &plot_attributes);
+
+  /* creation of TSResponse */
+  TSResponseHandle = osThreadNew(StartTSResponse, NULL, &TSResponse_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -735,7 +778,7 @@ static void MX_DMA_Init(void)
   HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
   /* DMA2_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
   /* DMA2_Stream4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 5, 0);
@@ -1186,6 +1229,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		start_adc_process = BOTTOM_HALF;
 	}
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == LCD_INT_Pin)
+	{
+		touch_screen_it = 1;
+	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -1237,10 +1288,11 @@ void startADCprocess(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  end_plot = 1;
 	  if(start_adc_process > 0 && end_plot)
 	  {
 		  start_adc_process = 0;
-		  end_plot = 0;
+//		  end_plot = 0;
 //		  for(int i=0; i<ADC_SINGLE_BUFF_LEN/2; i++)
 //		  {
 //			  memset(msg, 0, MSG_BUFF_LEN);
@@ -1264,45 +1316,72 @@ void startADCprocess(void *argument)
 void startPlot(void *argument)
 {
   /* USER CODE BEGIN startPlot */
-  BSP_LCD_Init();
-  BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER, LCD_FRAME_BUFFER);
-  BSP_LCD_SelectLayer(LTDC_ACTIVE_LAYER);
-  BSP_LCD_Clear(LCD_COLOR_BLACK);
-  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-  BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
+//  BSP_LCD_Init();
+//  BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER, LCD_FRAME_BUFFER);
+//  BSP_LCD_SelectLayer(LTDC_ACTIVE_LAYER);
+//  BSP_LCD_Clear(LCD_COLOR_BLACK);
+//  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+//  BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
   /* Infinite loop */
   for(;;)
   {
-	  if(start_plot)
-	  {
-		  start_plot = 0;
-		  BSP_LCD_Clear(LCD_COLOR_BLACK);
-		  uint8_t last = plot_buff[zero_index];
-		  for(int i = zero_index+1; i<PLOT_DATA_LEN; i++)
-		  {
-			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
-			  last = plot_buff[i];
-//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
-		  }
-		  last = plot_buff[0];
-		  for(int i = 0+1; i<=zero_index; i++)
-		  {
-			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
-			  last = plot_buff[i];
-//            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
-		  }
-
-//		  for(int i = 0; i<PLOT_DATA_LEN; i++)
+//	  if(current_mode == PUR){
+//		  draw_waveform();
+//	  }
+//	  if(start_plot)
+//	  {
+//		  start_plot = 0;
+//		  BSP_LCD_Clear(LCD_COLOR_BLACK);
+//		  uint8_t last = plot_buff[zero_index];
+//		  for(int i = zero_index+1; i<PLOT_DATA_LEN; i++)
 //		  {
-//			  memset(msg, 0, MSG_BUFF_LEN);
-//			  sprintf(msg, "%d\n", plot_buff[i]);
-//			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
+//			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
+//			  last = plot_buff[i];
+////            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
 //		  }
-		  end_plot = 1;
-	  }
+//		  last = plot_buff[0];
+//		  for(int i = 0+1; i<=zero_index; i++)
+//		  {
+//			  BSP_LCD_DrawLine(i-1, last, i, plot_buff[i]);
+//			  last = plot_buff[i];
+////            BSP_LCD_FillRect(i, plot_buff[i], 1, 1);
+//		  }
+//
+////		  for(int i = 0; i<PLOT_DATA_LEN; i++)
+////		  {
+////			  memset(msg, 0, MSG_BUFF_LEN);
+////			  sprintf(msg, "%d\n", plot_buff[i]);
+////			  HAL_UART_Transmit(&huart1, (uint8_t*)msg, MSG_BUFF_LEN, 10);
+////		  }
+//		  end_plot = 1;
+//	  }
     osDelay(100);
   }
   /* USER CODE END startPlot */
+}
+
+/* USER CODE BEGIN Header_StartTSResponse */
+/**
+* @brief Function implementing the TSResponse thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTSResponse */
+void StartTSResponse(void *argument)
+{
+  /* USER CODE BEGIN StartTSResponse */
+  /* Infinite loop */
+  for(;;)
+  {
+	if(touch_screen_it) {
+//		osDelay(100);
+		touch_screen_response();
+	}else if(current_mode == PUR){
+		draw_waveform();
+	}
+	  osDelay(100);
+  }
+  /* USER CODE END StartTSResponse */
 }
 
 /**

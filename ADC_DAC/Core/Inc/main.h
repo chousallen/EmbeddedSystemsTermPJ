@@ -36,6 +36,7 @@ extern "C" {
 
 #include "stm32746g_discovery.h"
 #include "stm32746g_discovery_lcd.h"
+#include "stm32746g_discovery_ts.h"
 
 #include "myglobals.h"
 #include <adc_process.h>
